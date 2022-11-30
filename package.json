@@ -1,0 +1,8 @@
+{
+  "name": "yayoi",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/4nzi/yayoi.git",
+  "author": "4nzi <anzi_ol@outlook.jp>",
+  "license": "MIT"
+}
