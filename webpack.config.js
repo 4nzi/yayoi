@@ -15,14 +15,13 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /.(vert|frag|glsl)$/,
-                exclude: '/node_modules/',
-                type: 'asset/source'
+                test: /\.(js|ts)$/,
+                exclude: /node_modules/,
+                use: 'ts-loader'
             },
             {
-                test: /.(js|ts)$/,
-                exclude: '/node_modules/',
-                use: 'ts-loader',
+                test: /.(vert|frag|glsl)$/,
+                use: 'raw-loader'
             }
         ]
     }
