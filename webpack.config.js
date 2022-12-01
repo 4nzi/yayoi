@@ -10,7 +10,7 @@ module.exports = {
         filename: "yayoi.js"
     },
     devServer: {
-        static: "./dist",
+        static: "./examples",
     },
     module: {
         rules: [
@@ -24,5 +24,8 @@ module.exports = {
                 use: 'raw-loader'
             }
         ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js'],
     }
 }
