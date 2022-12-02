@@ -12,14 +12,14 @@ out vec3 vNormal;
 out vec2 vUv;
 
 void main(void){
-    vec3  pos      = position;
+    vec3  pos = position;
 
     if(edge){
-        pos        += normal * 0.03;
+        pos += normal * 0.03;
     }
     
-    gl_Position    = pMatrix * vMatrix * mMatrix * vec4(pos, 1.0);
+    gl_Position = pMatrix * vMatrix * mMatrix * vec4(pos, 1.0);
 
-    vNormal        = normal;
-    vUv            = uv;
+    vNormal = normal;
+    vUv = uv;
 }

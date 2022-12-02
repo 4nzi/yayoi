@@ -1,34 +1,57 @@
-import RenderLoop from './RenderLoop'
-import { Camera, CameraController } from './Camera'
-import { Shader } from './Shader'
 import Model from './Model'
+import Scene from './Scene'
+import RenderLoop from './RenderLoop'
+import { ToonShader } from './Shader'
+import { Camera, CameraController } from './Camera'
+import parseGLB from './utils/parseGLB'
 import { MESH } from './types'
 import vs from './shaders/cray/vertexShader.glsl'
 import fs from './shaders/cray/fragmentShader.glsl'
+import vsToon from './shaders/toon/vertexShader.glsl'
+import fsToon from './shaders/toon/fragmentShader.glsl'
 
 export default class Yayoi {
   gl: WebGL2RenderingContext
-  shaders: Shader[]
+  shaders: any[]
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
     this.shaders = []
   }
 
-  shader() {
-    return new Shader(this.gl, vs, fs)
+  async loadGLB(src: string, callback: any) {
+    const res = await (await fetch(src)).blob()
+    const reader = new FileReader()
+
+    reader.readAsArrayBuffer(res)
+    reader.onload = () => {
+      callback(parseGLB(reader.result))
+    }
   }
 
-  model(mesh: MESH, shader: Shader) {
+  model(mesh: MESH, shader: any) {
     const model = new Model(mesh, this.gl)
-    const index = this.shaders.indexOf(shader)
+    const shaderInx = this.shaders.indexOf(shader)
 
-    if (index == -1) {
+    if (shaderInx == -1) {
       this.shaders.push(shader)
       model.setShader(this.shaders.length - 1)
-    } else model.setShader(index)
+    } else model.setShader(shaderInx)
 
     return model
+  }
+
+  shader(setting?: { color?: number[] }) {
+    const shader = new ToonShader(this.gl, vsToon, fsToon)
+
+    if (setting?.color) shader.activate().setColor(setting.color).deactivate()
+    else shader.activate().setColor([0.3, 0.3, 0.3]).deactivate()
+
+    return shader
+  }
+
+  scene() {
+    return new Scene()
   }
 
   camera() {
@@ -39,13 +62,14 @@ export default class Yayoi {
     return camera
   }
 
-  render(model: Model, camera: Camera) {
+  render(scene: Scene, camera: Camera, fps: 30) {
     // setting
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.depthFunc(this.gl.LEQUAL)
     this.gl.enable(this.gl.CULL_FACE)
 
-    this.shaders[model.shaderIdx].activate().setPmatrix(camera.pMatrix).deactivate()
+    // set pMatrix
+    this.shaders.forEach((shader) => shader.activate().setPmatrix(camera.pMatrix).deactivate())
 
     const onRender = () => {
       // clear
@@ -53,13 +77,21 @@ export default class Yayoi {
       this.gl.clearDepth(1.0)
       this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
 
+      // draw models x update matrix
       camera.updateViewMatrix()
 
-      // draw models
-      this.shaders[model.shaderIdx].activate().setVmatrix(camera.vMatrix).renderModel(model.preRender())
+      scene.models.forEach((model) => {
+        this.shaders[model.shaderIdx]
+          .activate()
+          .setAlbedoTexture(model.texture.albedo)
+          .preRender()
+          .setVmatrix(camera.vMatrix)
+          .setLightPosition(scene.lightPosition)
+          .renderModel(model.preRender())
+      })
     }
 
-    const RLoop = new RenderLoop(onRender, 30)
+    const RLoop = new RenderLoop(onRender, fps)
 
     return RLoop
   }

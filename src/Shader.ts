@@ -9,20 +9,14 @@ export class Shader {
     mMatrix: WebGLUniformLocation | null
     vMatrix: WebGLUniformLocation | null
     pMatrix: WebGLUniformLocation | null
-    invMatrix: WebGLUniformLocation | null
-    lightDirection: WebGLUniformLocation | null
   }
-  texLocation: {}
 
   constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
-    this.program = glUtils(gl).createProgramShader(vs, fs)
     this.gl = gl
-
-    gl.useProgram(this.program)
+    this.program = glUtils(gl).createProgramShader(vs, fs)
 
     this.attLocation = glUtils(gl).getStandardAttLocations(this.program)
     this.uniLocation = glUtils(gl).getStandardUniLocations(this.program)
-    this.texLocation = {}
   }
 
   activate() {
@@ -52,10 +46,6 @@ export class Shader {
     this.gl.uniformMatrix4fv(this.uniLocation.pMatrix, false, mat)
     return this
   }
-  setInvMatrix(mat: number[]) {
-    this.gl.uniformMatrix4fv(this.uniLocation.invMatrix, false, mat)
-    return this
-  }
 
   //...................................................
   preRender() {}
@@ -63,12 +53,109 @@ export class Shader {
   renderModel(model: Model) {
     //register uniform
     this.setMmatrix(model.transform.getMatrix())
-    this.setInvMatrix(model.transform.getInvMatrix())
 
     //draw
     this.gl.bindVertexArray(model.vao)
     this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
     this.gl.bindVertexArray(null)
+
+    return this
+  }
+}
+
+export class ToonShader extends Shader {
+  invLocation: WebGLUniformLocation | null
+  edgeLocation: WebGLUniformLocation | null
+  lightLocation: WebGLUniformLocation | null
+  colorLocation: WebGLUniformLocation | null
+  albedoTexLocation: WebGLUniformLocation | null
+  normalTexLocation: WebGLUniformLocation | null
+  texture: {
+    albedo: WebGLTexture | null
+    normal: WebGLTexture | null
+  }
+
+  constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
+    super(gl, vs, fs)
+
+    //custom uniforms
+    this.invLocation = gl.getUniformLocation(this.program, 'invMatrix')
+    this.edgeLocation = gl.getUniformLocation(this.program, 'edge')
+    this.lightLocation = gl.getUniformLocation(this.program, 'lightPosition')
+    this.colorLocation = gl.getUniformLocation(this.program, 'color')
+    this.albedoTexLocation = gl.getUniformLocation(this.program, 'albedoTex')
+    this.normalTexLocation = gl.getUniformLocation(this.program, 'normalTex')
+
+    //store texture
+    this.texture = {
+      albedo: null,
+      normal: null,
+    }
+  }
+
+  setLightPosition(vec: number[]) {
+    this.gl.uniform3fv(this.lightLocation, vec)
+    return this
+  }
+
+  setInvMatrix(mat: number[]) {
+    this.gl.uniformMatrix4fv(this.invLocation, false, mat)
+    return this
+  }
+
+  setColor(vec: number[]) {
+    this.gl.uniform3fv(this.colorLocation, vec)
+    return this
+  }
+
+  setAlbedoTexture(tex: WebGLTexture | null) {
+    this.texture.albedo = tex
+    return this
+  }
+  setNormalTexture(tex: WebGLTexture | null) {
+    this.texture.normal = tex
+    return this
+  }
+
+  //...................................................
+  preRender() {
+    // bind texture
+    if (this.texture.albedo) {
+      this.gl.activeTexture(this.gl.TEXTURE0)
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture.albedo)
+      this.gl.uniform1i(this.albedoTexLocation, 0)
+    }
+
+    if (this.texture.normal) {
+      this.gl.activeTexture(this.gl.TEXTURE1)
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture.normal)
+      this.gl.uniform1i(this.normalTexLocation, 1)
+    }
+
+    return this
+  }
+
+  renderModel(model: Model) {
+    // register matrix
+    this.setMmatrix(model.transform.getMatrix())
+    this.setInvMatrix(model.transform.getInvMatrix())
+
+    // bind and draw
+    this.gl.bindVertexArray(model.vao)
+
+    // model
+    this.gl.cullFace(this.gl.BACK)
+    this.gl.uniform1i(this.edgeLocation, 0)
+    this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
+
+    // edge
+    this.gl.cullFace(this.gl.FRONT)
+    this.gl.uniform1i(this.edgeLocation, 1)
+    this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
+
+    // unbind
+    this.gl.bindVertexArray(null)
+    this.gl.bindTexture(this.gl.TEXTURE_2D, null)
 
     return this
   }
