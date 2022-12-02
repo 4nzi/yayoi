@@ -1,3 +1,8 @@
+export interface SETTING {
+  albedo: number[] | string
+  edgeWidth?: number
+}
+
 export interface ATTRIBUTE {
   pos: number[]
   nor: number[]

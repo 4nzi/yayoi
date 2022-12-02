@@ -10,10 +10,6 @@ export default class Model {
   shaderIdx: number
   scene: SCENE
   id: number
-  texture: {
-    albedo: WebGLTexture | null
-    normal: WebGLTexture | null
-  }
 
   constructor(mesh: MESH, gl: WebGL2RenderingContext) {
     this.gl = gl
@@ -34,28 +30,10 @@ export default class Model {
       scale: mesh.scene.scale,
     }
     this.id = mesh.id
-    this.texture = {
-      albedo: null,
-      normal: null,
-    }
   }
 
   setShader(shaderInx: number) {
     this.shaderIdx = shaderInx
-    return this
-  }
-
-  async loadTexture(tex: { albedo: string; normal: string }) {
-    if (tex.albedo)
-      await glUtils(this.gl)
-        .loadTexture(tex.albedo)
-        .then((res) => (this.texture.albedo = res))
-
-    if (tex.normal)
-      await glUtils(this.gl)
-        .loadTexture(tex.normal)
-        .then((res) => (this.texture.normal = res))
-
     return this
   }
 

@@ -66,6 +66,7 @@ export class Shader {
 export class ToonShader extends Shader {
   invLocation: WebGLUniformLocation | null
   edgeLocation: WebGLUniformLocation | null
+  edgeWidthLocation: WebGLUniformLocation | null
   lightLocation: WebGLUniformLocation | null
   colorLocation: WebGLUniformLocation | null
   albedoTexLocation: WebGLUniformLocation | null
@@ -81,6 +82,7 @@ export class ToonShader extends Shader {
     //custom uniforms
     this.invLocation = gl.getUniformLocation(this.program, 'invMatrix')
     this.edgeLocation = gl.getUniformLocation(this.program, 'edge')
+    this.edgeWidthLocation = gl.getUniformLocation(this.program, 'edgeWidth')
     this.lightLocation = gl.getUniformLocation(this.program, 'lightPosition')
     this.colorLocation = gl.getUniformLocation(this.program, 'color')
     this.albedoTexLocation = gl.getUniformLocation(this.program, 'albedoTex')
@@ -108,12 +110,16 @@ export class ToonShader extends Shader {
     return this
   }
 
-  setAlbedoTexture(tex: WebGLTexture | null) {
-    this.texture.albedo = tex
+  setEdgeWidth(val: number) {
+    this.gl.uniform1f(this.edgeWidthLocation, val)
     return this
   }
-  setNormalTexture(tex: WebGLTexture | null) {
-    this.texture.normal = tex
+
+  async loadAlbedoTexture(src: string) {
+    await glUtils(this.gl)
+      .loadTexture(src)
+      .then((res) => (this.texture.albedo = res))
+
     return this
   }
 
