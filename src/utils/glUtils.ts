@@ -60,7 +60,7 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
     return createProgram(vShader, fShader)
   }
 
-  const createVAO = (pos: number[], inx: number[]) => {
+  const createVAO = (pos: number[], inx: number[], nor?: number[], uv?: number[], wei?: number[], bon?: number[]) => {
     let vao, vbo, ibo
     vao = gl.createVertexArray()
 
@@ -85,6 +85,54 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(inx), gl.STATIC_DRAW)
     }
 
+    //setup normal
+    if (nor) {
+      vbo = gl.createBuffer()
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(nor), gl.STATIC_DRAW)
+      gl.enableVertexAttribArray(ATTR_NORMAL_LOC)
+      gl.vertexAttribPointer(ATTR_NORMAL_LOC, ATTR_NORMAL_STR, gl.FLOAT, false, 0, 0)
+
+      vbo = null
+    }
+
+    //setup uv
+    if (uv) {
+      vbo = gl.createBuffer()
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW)
+      gl.enableVertexAttribArray(ATTR_UV_LOC)
+      gl.vertexAttribPointer(ATTR_UV_LOC, ATTR_UV_STR, gl.FLOAT, false, 0, 0)
+
+      vbo = null
+    }
+
+    //setup weights
+    if (wei) {
+      vbo = gl.createBuffer()
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wei), gl.STATIC_DRAW)
+      gl.enableVertexAttribArray(ATTR_WEIGHTS_LOC)
+      gl.vertexAttribPointer(ATTR_WEIGHTS_LOC, ATTR_WEIGHTS_STR, gl.FLOAT, false, 0, 0)
+
+      vbo = null
+    }
+
+    //setup boneIdx
+    if (bon) {
+      vbo = gl.createBuffer()
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bon), gl.STATIC_DRAW)
+      gl.enableVertexAttribArray(ATTR_BONEIDX_LOC)
+      gl.vertexAttribPointer(ATTR_BONEIDX_LOC, ATTR_BONEIDX_STR, gl.FLOAT, false, 0, 0)
+
+      vbo = null
+    }
+
     gl.bindVertexArray(null)
     return vao
   }
@@ -92,8 +140,8 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
   const getStandardAttLocations = (program: WebGLProgram) => {
     return {
       position: gl.getAttribLocation(program, ATTR_POSITION_NAME),
-      // normal: gl.getAttribLocation(program, ATTR_NORMAL_NAME),
-      // uv: gl.getAttribLocation(program, ATTR_UV_NAME)
+      normal: gl.getAttribLocation(program, ATTR_NORMAL_NAME),
+      uv: gl.getAttribLocation(program, ATTR_UV_NAME),
     }
   }
 
@@ -102,9 +150,28 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
       mMatrix: gl.getUniformLocation(program, 'mMatrix'),
       vMatrix: gl.getUniformLocation(program, 'vMatrix'),
       pMatrix: gl.getUniformLocation(program, 'pMatrix'),
-      invMatrix: gl.getUniformLocation(program, 'invMatrix'),
-      lightDirection: gl.getUniformLocation(program, 'lightDirection'),
+      // invMatrix: gl.getUniformLocation(program, 'invMatrix'),
+      // lightDirection: gl.getUniformLocation(program, 'lightDirection'),
     }
+  }
+
+  const loadTexture = async (src: string) => {
+    const img = new Image()
+
+    img.src = src
+    await img.decode()
+
+    let tex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
+    gl.generateMipmap(gl.TEXTURE_2D)
+
+    gl.bindTexture(gl.TEXTURE_2D, null)
+
+    return tex
   }
 
   return {
@@ -112,6 +179,7 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
     createVAO,
     getStandardAttLocations,
     getStandardUniLocations,
+    loadTexture,
   }
 }
 
