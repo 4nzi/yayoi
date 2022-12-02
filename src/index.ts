@@ -1,14 +1,14 @@
 import Model from './Model'
-import Scene from './Scene'
-import RenderLoop from './RenderLoop'
 import { ToonShader } from './Shader'
 import { Camera, CameraController } from './Camera'
+import Scene from './Scene'
+import RenderLoop from './RenderLoop'
 import parseGLB from './utils/parseGLB'
-import { MESH } from './types'
-import vs from './shaders/cray/vertexShader.glsl'
-import fs from './shaders/cray/fragmentShader.glsl'
-import vsToon from './shaders/toon/vertexShader.glsl'
-import fsToon from './shaders/toon/fragmentShader.glsl'
+import { MESH, SETTING } from './types'
+import vFill from './shaders/fill/vertexShader.glsl'
+import fFill from './shaders/fill/fragmentShader.glsl'
+import vTex from './shaders/tex/vertexShader.glsl'
+import fTex from './shaders/tex/fragmentShader.glsl'
 
 export default class Yayoi {
   gl: WebGL2RenderingContext
@@ -41,11 +41,23 @@ export default class Yayoi {
     return model
   }
 
-  shader(setting?: { color?: number[] }) {
-    const shader = new ToonShader(this.gl, vsToon, fsToon)
+  shader(setting: SETTING) {
+    let shader
 
-    if (setting?.color) shader.activate().setColor(setting.color).deactivate()
-    else shader.activate().setColor([0.3, 0.3, 0.3]).deactivate()
+    // set Texture
+    if (typeof setting.albedo == 'string') {
+      shader = new ToonShader(this.gl, vTex, fTex)
+      shader.loadAlbedoTexture(setting.albedo)
+    } else if (setting.albedo instanceof Array && setting.albedo.length == 3) {
+      shader = new ToonShader(this.gl, vFill, fFill)
+      shader.activate().setColor(setting.albedo).deactivate()
+    } else return console.warn('Invalid value')
+
+    // set edgeWidth
+    shader
+      .activate()
+      .setEdgeWidth(setting.edgeWidth || 0.03)
+      .deactivate()
 
     return shader
   }
@@ -68,8 +80,10 @@ export default class Yayoi {
     this.gl.depthFunc(this.gl.LEQUAL)
     this.gl.enable(this.gl.CULL_FACE)
 
-    // set pMatrix
-    this.shaders.forEach((shader) => shader.activate().setPmatrix(camera.pMatrix).deactivate())
+    // set uniform
+    this.shaders.forEach((shader) =>
+      shader.activate().setPmatrix(camera.pMatrix).setLightPosition(scene.lightPosition).deactivate()
+    )
 
     const onRender = () => {
       // clear
@@ -83,10 +97,8 @@ export default class Yayoi {
       scene.models.forEach((model) => {
         this.shaders[model.shaderIdx]
           .activate()
-          .setAlbedoTexture(model.texture.albedo)
           .preRender()
           .setVmatrix(camera.vMatrix)
-          .setLightPosition(scene.lightPosition)
           .renderModel(model.preRender())
       })
     }

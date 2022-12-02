@@ -15,22 +15,20 @@
       yayoi.loadGLB('./gltf/testSuzanne.glb', (meshes) => onload(meshes))
 
       const onload = (meshes) => {
-        const shader = yayoi.shader()
-        const shader2 = yayoi.shader({ color: [0, 1, 0] })
         const camera = yayoi.camera()
         const scene = yayoi.scene()
 
         meshes.forEach((mesh) => {
-          if (!mesh.texture.albedo) {
-            const model = yayoi.model(mesh, shader2)
-            model.loadTexture(mesh.texture)
-            scene.push(model)
+          let shader
+          if (mesh.texture.albedo) {
+            shader = yayoi.shader({ albedo: mesh.texture.albedo })
           } else {
-            const model = yayoi.model(mesh, shader)
-            model.loadTexture(mesh.texture)
-            scene.push(model)
-            console.log(model)
+            shader = yayoi.shader({ albedo: [1, 1, 0], edgeWidth: 0.1 })
           }
+
+          const model = yayoi.model(mesh, shader)
+
+          scene.push(model)
         })
 
         yayoi.render(scene, camera).start()
