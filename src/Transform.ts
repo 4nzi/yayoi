@@ -4,19 +4,20 @@ const m = new matIV()
 
 export default class Transform {
   static deg2Rad: number
-  position: Array<number>
-  scale: Array<number>
-  rotation: Array<number>
-  matrix: Array<number>
-  invMatrix: Array<number>
-  forward: Array<number>
-  up: Array<number>
-  right: Array<number>
+  position: number[]
+  scale: number[]
+  rotation: number[]
+  matrix: number[]
+  invMatrix: number[]
+  forward: number[]
+  up: number[]
+  right: number[]
 
   constructor() {
     this.position = [0, 0, 0]
     this.scale = [1, 1, 1]
     this.rotation = [0, 0, 0]
+
     this.matrix = m.identity(m.create())
     this.invMatrix = m.identity(m.create())
 
@@ -56,6 +57,9 @@ export default class Transform {
   }
   getInvMatrix() {
     return this.invMatrix
+  }
+  getPosition() {
+    return [this.matrix[12], this.matrix[13], this.matrix[14]]
   }
 
   reset() {
