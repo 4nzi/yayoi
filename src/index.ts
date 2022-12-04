@@ -19,7 +19,7 @@ export default class Yayoi {
     this.shaders = []
   }
 
-  async loadGLB(src: string, callback: any) {
+  async loadGLB(src: string, callback: (meshes: any) => void) {
     const res = await (await fetch(src)).blob()
     const reader = new FileReader()
 
@@ -44,7 +44,6 @@ export default class Yayoi {
   shader(setting: SETTING) {
     let shader
 
-    // set Texture
     if (typeof setting.albedo == 'string') {
       shader = new ToonShader(this.gl, vTex, fTex)
       shader.loadAlbedoTexture(setting.albedo)
@@ -53,9 +52,12 @@ export default class Yayoi {
       shader.activate().setColor(setting.albedo).deactivate()
     } else return console.warn('Invalid value')
 
-    // set edgeWidth
     shader
       .activate()
+      .setSdwThreshold(setting.sdwThreshold || 0.5)
+      .setHiThreshold(setting.hiThreshold || 0.5)
+      .setRimThreshold(setting.rimThreshold || 1.0)
+      .setLightPosition(setting.mainLight || [0.5, 0.5, 0.1])
       .setEdgeWidth(setting.edgeWidth || 0.03)
       .deactivate()
 
@@ -81,9 +83,7 @@ export default class Yayoi {
     this.gl.enable(this.gl.CULL_FACE)
 
     // set uniform
-    this.shaders.forEach((shader) =>
-      shader.activate().setPmatrix(camera.pMatrix).setLightPosition(scene.lightPosition).deactivate()
-    )
+    this.shaders.forEach((shader) => shader.activate().setPmatrix(camera.pMatrix).deactivate())
 
     const onRender = () => {
       // clear
@@ -99,6 +99,7 @@ export default class Yayoi {
           .activate()
           .preRender()
           .setVmatrix(camera.vMatrix)
+          .setEyePosition(camera.transform.getPosition())
           .renderModel(model.preRender())
       })
     }

@@ -60,7 +60,14 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
     return createProgram(vShader, fShader)
   }
 
-  const createVAO = (pos: number[], inx: number[], nor?: number[], uv?: number[], wei?: number[], bon?: number[]) => {
+  const createVAO = (
+    pos: number[],
+    inx: number[],
+    nor?: number[],
+    uv?: number[],
+    wei?: number[],
+    bon?: number[]
+  ) => {
     let vao, vbo, ibo
     vao = gl.createVertexArray()
 
@@ -150,8 +157,6 @@ const glUtils = (webglContext: WebGL2RenderingContext) => {
       mMatrix: gl.getUniformLocation(program, 'mMatrix'),
       vMatrix: gl.getUniformLocation(program, 'vMatrix'),
       pMatrix: gl.getUniformLocation(program, 'pMatrix'),
-      // invMatrix: gl.getUniformLocation(program, 'invMatrix'),
-      // lightDirection: gl.getUniformLocation(program, 'lightDirection'),
     }
   }
 

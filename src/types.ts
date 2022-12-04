@@ -1,5 +1,10 @@
 export interface SETTING {
   albedo: number[] | string
+  rimColor?: number[]
+  sdwThreshold?: number
+  hiThreshold?: number
+  rimThreshold?: number
+  mainLight?: number[]
   edgeWidth?: number
 }
 

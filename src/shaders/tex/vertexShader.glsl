@@ -9,13 +9,14 @@ uniform mat4 vMatrix;
 uniform mat4 pMatrix;
 uniform bool edge;
 uniform float edgeWidth;
+
 out vec3 vNormal;
 out vec2 vUv;
 
 void main(void){
     vec3  pos = position;
 
-    if(edge){
+    if (edge) {
         pos += normal * float(edgeWidth);
     }
     

@@ -4,35 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>yayoi example</title>
+    <link rel="stylesheet" href="./css/destyle.css" />
+    <link rel="stylesheet" href="./css/style.css" />
   </head>
   <body>
-    <canvas id="root"></canvas>
-    <canvas id="root2"></canvas>
+    <div class="card">
+      <div class="card-base">
+        <div class="card-header">
+          <span class="name">ブラッキー</span>
+          <span class="hp">HP</span>
+          <span class="number">70</span>
+          <span>
+            <img class="icon" src="./img/nc139223.png" alt="icon" />
+          </span>
+        </div>
+        <div class="canvas-flame">
+          <canvas id="root"></canvas>
+          <p class="hanging-sign">全国図鑑NO.356 ちょうじゅポケモン 高さ:1.0m 重さ:23.4kg</p>
+        </div>
+        <div class="waza">
+          <div class="waza-main">
+            <img class="icon2" src="./img/nc139223.png" alt="icon" />
+            <p>でんこうせっか</p>
+          </div>
+          <p class="waza-discription">
+            自分の山札にあるトレーナーズを２枚、相手に召せてから、手札に加える。そして山札を切る。
+          </p>
+        </div>
+        <div class="waza">
+          <div class="waza-main">
+            <img class="icon2" src="./img/nc139223.png" alt="icon" />
+            <p>おいうち</p>
+          </div>
+          <p class="waza-discription">相手のバトルポケモンをねむりにする。</p>
+        </div>
+        <div class="pin">
+          <span class="run">弱点</span>
+          <span class="run">抵抗力</span>
+        </div>
+      </div>
+    </div>
 
     <script src="./yayoi.js"></script>
     <script>
-      const yayoi = new Yayoi(document.querySelector('#root').getContext('webgl2'))
-      yayoi.loadGLB('./gltf/testSuzanne.glb', (meshes) => onload(meshes))
+      const canvas = document.querySelector('#root')
+      canvas.width = 400
+      canvas.height = 250
 
-      const onload = (meshes) => {
+      const yayoi = new Yayoi(canvas.getContext('webgl2'))
+
+      yayoi.loadGLB('./gltf/testSuzanne.glb', (meshes) => {
         const camera = yayoi.camera()
         const scene = yayoi.scene()
-
-        meshes.forEach((mesh) => {
-          let shader
-          if (mesh.texture.albedo) {
-            shader = yayoi.shader({ albedo: mesh.texture.albedo })
-          } else {
-            shader = yayoi.shader({ albedo: [1, 1, 0], edgeWidth: 0.1 })
-          }
-
-          const model = yayoi.model(mesh, shader)
-
-          scene.push(model)
+        const shader = yayoi.shader({
+          albedo: meshes[0].texture.albedo,
+          sdwThreshold: 0.5,
+          hiThreshold: 0.5,
+          rimThreshold: 1.0,
+          mainLight: [0.5, 0.5, 0.1],
+          edgeWidth: 0.03,
         })
 
+        const model = yayoi.model(meshes[0], shader)
+        scene.push(model)
+
         yayoi.render(scene, camera).start()
-      }
+      })
     </script>
   </body>
 </html>
