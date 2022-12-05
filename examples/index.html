@@ -53,9 +53,9 @@
 
       const yayoi = new Yayoi(canvas.getContext('webgl2'))
 
-      yayoi.loadGLB('./gltf/testSuzanne.glb', (meshes) => {
-        const camera = yayoi.camera()
+      yayoi.loadGLB('./gltf/testMan2.glb', (meshes) => {
         const scene = yayoi.scene()
+        const camera = yayoi.camera()
         const shader = yayoi.shader({
           albedo: meshes[0].texture.albedo,
           sdwThreshold: 0.5,
@@ -63,11 +63,15 @@
           rimThreshold: 1.0,
           mainLight: [0.5, 0.5, 0.1],
           edgeWidth: 0.03,
+          skinning: true,
         })
 
         const model = yayoi.model(meshes[0], shader)
+        const armature = yayoi.armature().loadGLTFSkins(meshes[0].skins)
+        armature.setAnimations(meshes[0].animations)
+        armature.play()
+        model.setArmature(armature)
         scene.push(model)
-
         yayoi.render(scene, camera).start()
       })
     </script>
