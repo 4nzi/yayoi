@@ -1,5 +1,6 @@
 import glUtils from './utils/glUtils'
 import Transform from './Transform'
+import Armature from './Armature'
 import { MESH, ATTRIBUTE, SCENE } from './types'
 
 export default class Model {
@@ -7,14 +8,15 @@ export default class Model {
   attribute: ATTRIBUTE
   vao: WebGLVertexArrayObject | null
   transform: Transform
-  shaderIdx: number
+  shaderInx: number
   scene: SCENE
   id: number
+  armature: Armature | null
 
   constructor(mesh: MESH, gl: WebGL2RenderingContext) {
     this.gl = gl
     this.attribute = mesh.attribute
-    this.shaderIdx = -1
+    this.shaderInx = -1
     this.transform = new Transform()
     this.vao = glUtils(this.gl).createVAO(
       this.attribute.pos,
@@ -30,10 +32,16 @@ export default class Model {
       scale: mesh.scene.scale,
     }
     this.id = mesh.id
+    this.armature = null
   }
 
-  setShader(shaderInx: number) {
-    this.shaderIdx = shaderInx
+  setShader(inx: number) {
+    this.shaderInx = inx
+    return this
+  }
+
+  setArmature(arm: Armature) {
+    this.armature = arm
     return this
   }
 

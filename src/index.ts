@@ -1,7 +1,8 @@
 import Model from './Model'
-import { ToonShader } from './Shader'
+import { ToonShader, SkinShader } from './Shader'
 import { Camera, CameraController } from './Camera'
 import Scene from './Scene'
+import Armature from './Armature'
 import RenderLoop from './RenderLoop'
 import parseGLB from './utils/parseGLB'
 import { MESH, SETTING } from './types'
@@ -9,6 +10,7 @@ import vFill from './shaders/fill/vertexShader.glsl'
 import fFill from './shaders/fill/fragmentShader.glsl'
 import vTex from './shaders/tex/vertexShader.glsl'
 import fTex from './shaders/tex/fragmentShader.glsl'
+import vSkin from './shaders/skin/vertexShader.glsl'
 
 export default class Yayoi {
   gl: WebGL2RenderingContext
@@ -44,7 +46,10 @@ export default class Yayoi {
   shader(setting: SETTING) {
     let shader
 
-    if (typeof setting.albedo == 'string') {
+    if (typeof setting.albedo == 'string' && setting.skinning == true) {
+      shader = new SkinShader(this.gl, vSkin, fTex)
+      shader.loadAlbedoTexture(setting.albedo)
+    } else if (typeof setting.albedo == 'string') {
       shader = new ToonShader(this.gl, vTex, fTex)
       shader.loadAlbedoTexture(setting.albedo)
     } else if (setting.albedo instanceof Array && setting.albedo.length == 3) {
@@ -68,6 +73,10 @@ export default class Yayoi {
     return new Scene()
   }
 
+  armature() {
+    return new Armature()
+  }
+
   camera() {
     const camera = new Camera(this.gl)
     const CameraCtrl = new CameraController(this.gl, camera)
@@ -76,16 +85,21 @@ export default class Yayoi {
     return camera
   }
 
-  render(scene: Scene, camera: Camera, fps: 30) {
+  render(scene: Scene, camera: Camera, fps: number) {
     // setting
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.depthFunc(this.gl.LEQUAL)
     this.gl.enable(this.gl.CULL_FACE)
 
+    let count = 0
+
     // set uniform
     this.shaders.forEach((shader) => shader.activate().setPmatrix(camera.pMatrix).deactivate())
 
     const onRender = () => {
+      count++
+      if (count == 80) count = 0
+
       // clear
       this.gl.clearColor(0.3, 0.3, 0.3, 1.0)
       this.gl.clearDepth(1.0)
@@ -95,7 +109,11 @@ export default class Yayoi {
       camera.updateViewMatrix()
 
       scene.models.forEach((model) => {
-        this.shaders[model.shaderIdx]
+        if (model.armature?.animations) {
+          model.armature.playAnimations(count)
+        }
+
+        this.shaders[model.shaderInx]
           .activate()
           .preRender()
           .setVmatrix(camera.vMatrix)
