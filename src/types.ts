@@ -6,6 +6,7 @@ export interface SETTING {
   rimThreshold?: number
   mainLight?: number[]
   edgeWidth?: number
+  skinning: boolean
 }
 
 export interface ATTRIBUTE {
@@ -28,6 +29,19 @@ export interface SKIN {
   scale: number[] | null
 }
 
+export interface JOINT {
+  name: string
+  jointNum: number
+  parent: number | null
+  isModified: boolean
+  position: number[]
+  rotation: number[]
+  localMat: number[]
+  worldMat: number[]
+  bindMat: number[]
+  offsetMat: number[]
+}
+
 export interface TEXTURE {
   albedo: string
   normal: string
@@ -41,7 +55,7 @@ export interface SCENE {
 
 export interface ANIMATIONS {
   [index: string]: {
-    rotation?: {
+    rotation: {
       interp: string
       samples: Array<{
         t: number
