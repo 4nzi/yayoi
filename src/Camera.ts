@@ -55,12 +55,32 @@ export class Camera {
     if (this.mode == Camera.MODE_FREE) {
       m.identity(this.transform.matrix)
       m.translate(this.transform.matrix, this.transform.position, this.transform.matrix)
-      m.rotate(this.transform.matrix, this.transform.rotation[0] * Transform.deg2Rad, [1.0, 0.0, 0.0], this.transform.matrix)
-      m.rotate(this.transform.matrix, this.transform.rotation[1] * Transform.deg2Rad, [0.0, 1.0, 0.0], this.transform.matrix)
+      m.rotate(
+        this.transform.matrix,
+        this.transform.rotation[0] * Transform.deg2Rad,
+        [1.0, 0.0, 0.0],
+        this.transform.matrix
+      )
+      m.rotate(
+        this.transform.matrix,
+        this.transform.rotation[1] * Transform.deg2Rad,
+        [0.0, 1.0, 0.0],
+        this.transform.matrix
+      )
     } else {
       m.identity(this.transform.matrix)
-      m.rotate(this.transform.matrix, this.transform.rotation[0] * Transform.deg2Rad, [1.0, 0.0, 0.0], this.transform.matrix)
-      m.rotate(this.transform.matrix, this.transform.rotation[1] * Transform.deg2Rad, [0.0, 1.0, 0.0], this.transform.matrix)
+      m.rotate(
+        this.transform.matrix,
+        this.transform.rotation[0] * Transform.deg2Rad,
+        [1.0, 0.0, 0.0],
+        this.transform.matrix
+      )
+      m.rotate(
+        this.transform.matrix,
+        this.transform.rotation[1] * Transform.deg2Rad,
+        [0.0, 1.0, 0.0],
+        this.transform.matrix
+      )
       m.translate(this.transform.matrix, this.transform.position, this.transform.matrix)
     }
 

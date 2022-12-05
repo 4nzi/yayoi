@@ -19,6 +19,17 @@ export interface ATTRIBUTE {
   bon: number[]
 }
 
+export interface TEXTURE {
+  albedo: string
+  normal: string
+}
+
+export interface SCENE {
+  translation: number[]
+  rotation: number[]
+  scale: number[]
+}
+
 export interface SKIN {
   jointNum: 0
   name: string
@@ -40,17 +51,6 @@ export interface JOINT {
   worldMat: number[]
   bindMat: number[]
   offsetMat: number[]
-}
-
-export interface TEXTURE {
-  albedo: string
-  normal: string
-}
-
-export interface SCENE {
-  translation: number[]
-  rotation: number[]
-  scale: number[]
 }
 
 export interface ANIMATIONS {

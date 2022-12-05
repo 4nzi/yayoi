@@ -6,7 +6,6 @@ layout (location = 2) in vec2 uv;
 layout (location = 3) in vec4 weights;
 layout (location = 4) in vec4 boneIdx;
 
-
 uniform mat4 mMatrix;
 uniform mat4 vMatrix;
 uniform mat4 pMatrix;
@@ -17,7 +16,6 @@ uniform mat4 bones[76];
 out vec3 vNormal;
 out vec2 vUv;
 
-
 void main(void){
     mat4 mvpMatrix = pMatrix * vMatrix * mMatrix;
 
@@ -27,5 +25,5 @@ void main(void){
                                 bones[int(boneIdx[3])]  * vec4(position, 1.0) * weights[3]);
 
     vNormal = normal;
-    vUv = uv;
+    vUv     = uv;
 } 

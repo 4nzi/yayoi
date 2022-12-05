@@ -16,9 +16,7 @@ out vec2 vUv;
 void main(void){
     vec3  pos = position;
 
-    if (edge) {
-        pos += normal * float(edgeWidth);
-    }
+    if (edge) { pos += normal * float(edgeWidth); }
     
     gl_Position = pMatrix * vMatrix * mMatrix * vec4(pos, 1.0);
 
