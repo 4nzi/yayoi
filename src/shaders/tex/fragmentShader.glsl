@@ -17,10 +17,8 @@ uniform float rimThreshold;
 out vec4 outColor;
 
 void main(void){
-    if (edge) {
-       outColor   = vec4(0, 0, 0, 1);
-
-    } else {
+    if (edge) { outColor   = vec4(0, 0, 0, 1); } 
+    else {
         // shadow
         vec3  invLight     = normalize(invMatrix * vec4(lightPosition, 0.0)).xyz;
         float halfLambert  = dot(vNormal, invLight) * 0.5 + 0.5;
@@ -31,7 +29,8 @@ void main(void){
         vec3  halfLE       = normalize(invLight + invEye);
         float specular     = pow(clamp(dot(vNormal, halfLE), 0.0, 1.0), 50.0);
         vec4  stepSpecular = vec4(vec3(step(hiThreshold, specular)), 1.0);
-
+        
+        // rim
         float rim          = rimThreshold - clamp(dot(vNormal, eyePosition), 0.0, rimThreshold);
 
         // color
