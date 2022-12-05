@@ -197,3 +197,26 @@ export class ToonShader extends Shader {
     return this
   }
 }
+
+export class SkinShader extends ToonShader {
+  boneIdx: WebGLUniformLocation | null
+  weights: WebGLUniformLocation | null
+
+  constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
+    super(gl, vs, fs)
+
+    //custom attribute
+    this.boneIdx = gl.getAttribLocation(this.program, 'boneIdx')
+    this.weights = gl.getAttribLocation(this.program, 'weights')
+  }
+
+  //...................................................
+  renderModel(model: Model) {
+    model.armature?.orderedJoints.forEach((bone, index) => {
+      let bones = this.gl.getUniformLocation(this.program, `bones[${index}]`)
+      this.gl.uniformMatrix4fv(bones, false, bone.offsetMat)
+    })
+    super.renderModel(model)
+    return this
+  }
+}
