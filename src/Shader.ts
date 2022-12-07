@@ -212,7 +212,7 @@ export class SkinShader extends ToonShader {
 
   //...................................................
   renderModel(model: Model) {
-    model.armature?.orderedJoints.forEach((bone, index) => {
+    model.armature?.orderedJoints.forEach((bone: any, index: number) => {
       let bones = this.gl.getUniformLocation(this.program, `bones[${index}]`)
       this.gl.uniformMatrix4fv(bones, false, bone.offsetMat)
     })
