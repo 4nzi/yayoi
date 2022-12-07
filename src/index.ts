@@ -1,6 +1,6 @@
 import Model from './Model'
 import { ToonShader, SkinShader } from './Shader'
-import { Camera, CameraController } from './Camera'
+import { Camera, CameraController, LimitController } from './Camera'
 import Scene from './Scene'
 import Armature from './Armature'
 import RenderLoop from './RenderLoop'
@@ -77,31 +77,32 @@ export default class Yayoi {
     return new Armature()
   }
 
-  camera() {
-    const camera = new Camera(this.gl)
+  camera(pos: number[] = [0, 0, 10], fov: number) {
+    const camera = new Camera(this.gl, fov)
     const CameraCtrl = new CameraController(this.gl, camera)
-    camera.transform.position = [0.0, 0.0, 5.0]
+    camera.transform.position = pos
 
     return camera
   }
 
   render(scene: Scene, camera: Camera, fps: number) {
+    const rgba = scene.environment
+    let count = 0
+
     // setting
     this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.depthFunc(this.gl.LEQUAL)
     this.gl.enable(this.gl.CULL_FACE)
-
-    let count = 0
 
     // set uniform
     this.shaders.forEach((shader) => shader.activate().setPmatrix(camera.pMatrix).deactivate())
 
     const onRender = () => {
       count++
-      if (count == 80) count = 0
+      if (count == 30) count = 0
 
       // clear
-      this.gl.clearColor(0.3, 0.3, 0.3, 1.0)
+      this.gl.clearColor(rgba[0], rgba[1], rgba[2], rgba[3])
       this.gl.clearDepth(1.0)
       this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
 
