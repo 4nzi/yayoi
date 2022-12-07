@@ -53,24 +53,25 @@
 
       const yayoi = new Yayoi(canvas.getContext('webgl2'))
 
-      yayoi.loadGLB('./gltf/testMan2.glb', (meshes) => {
+      yayoi.loadGLB('./gltf/umbreon.glb', (meshes) => {
         const scene = yayoi.scene()
-        const camera = yayoi.camera()
+        const camera = yayoi.camera([0, 0, 10], 40)
         const shader = yayoi.shader({
           albedo: meshes[0].texture.albedo,
           sdwThreshold: 0.5,
-          hiThreshold: 0.5,
-          rimThreshold: 1.0,
-          mainLight: [0.5, 0.5, 0.1],
+          hiThreshold: 1.0,
+          rimThreshold: 2.5,
+          mainLight: [-0.6, 0.2, 0.6],
           edgeWidth: 0.03,
-          skinning: true,
+          // skinning: true,
         })
-
         const model = yayoi.model(meshes[0], shader)
-        const armature = yayoi.armature().loadGLTFSkins(meshes[0].skins)
-        armature.setAnimations(meshes[0].animations)
-        armature.play()
-        model.setArmature(armature)
+
+        // const armature = yayoi.armature().loadGLTFSkins(meshes[0].skins)
+        // armature.setAnimations(meshes[0].animations)
+        // armature.play()
+        // model.setArmature(armature)
+
         scene.push(model)
         yayoi.render(scene, camera).start()
       })
