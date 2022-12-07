@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yayoi Viewer</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=M+PLUS+1p');
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        background-image: initial;
+        background-color: rgb(40, 43, 45);
+        box-shadow: rgb(0 0 0 / 30%) 0px 0px 8px 2px;
+        display: flex;
+        background: #353535;
+        padding: 0 2em;
+        height: 4rem;
+        line-height: 4rem;
+        align-items: center;
+        box-shadow: 0 0 8px 2px rgb(0 0 0 / 30%);
+        z-index: 1;
+      }
+      h1 {
+        font-family: 'M PLUS 1p', sans-serif;
+        color: rgb(226, 223, 219);
+        font-size: 1.4rem;
+        font-weight: 100;
+      }
+      canvas {
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header">
+      <h1>Yayoi Viewer</h1>
+    </header>
+    <main>
+      <canvas id="root"></canvas>
+    </main>
+
+    <script src="./yayoi.js"></script>
+    <script>
+      const canvas = document.querySelector('#root')
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight - document.getElementById('header').clientHeight
+
+      const yayoi = new Yayoi(canvas.getContext('webgl2'))
+      yayoi.loadGLB('./gltf/testSuzanne.glb', (meshes) => {
+        const scene = yayoi.scene().setEnvironment([0.5, 0.5, 0.8, 0])
+        const camera = yayoi.camera([0, 0, 5], 45)
+        const shader = yayoi.shader({
+          albedo: meshes[0].texture.albedo,
+          sdwThreshold: 0.5,
+          hiThreshold: 0.5,
+          rimThreshold: 1.7,
+          mainLight: [0.7, 0.4, 0.1],
+          edgeWidth: 0.03,
+        })
+        const model = yayoi.model(meshes[0], shader)
+
+        scene.push(model)
+        yayoi.render(scene, camera).start()
+      })
+    </script>
+  </body>
+</html>
