@@ -4,22 +4,117 @@ import Model from './Model'
 export class Shader {
   gl: WebGL2RenderingContext
   program: WebGLProgram
-  attLocation: {
-    position: WebGLUniformLocation | null
-    normal: WebGLUniformLocation | null
-    uv: WebGLUniformLocation | null
-  }
-  uniLocation: {
-    mMatrix: WebGLUniformLocation | null
-    vMatrix: WebGLUniformLocation | null
-    pMatrix: WebGLUniformLocation | null
-  }
+  isEdge: boolean
+  uniformList: { [name: string]: { loc: WebGLUniformLocation; type: string } }
+  textureList: { loc: WebGLUniformLocation | null; tex: WebGLTexture | null }[]
 
   constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
     this.gl = gl
     this.program = glUtils(gl).createProgramShader(vs, fs)
-    this.attLocation = glUtils(gl).getStandardAttLocations(this.program)
-    this.uniLocation = glUtils(gl).getStandardUniLocations(this.program)
+    this.isEdge = true
+    this.uniformList = {}
+    this.textureList = []
+
+    //set uniform location
+    this.prepareUniforms(
+      'mMatrix',
+      'mat4',
+      'vMatrix',
+      'mat4',
+      'pMatrix',
+      'mat4',
+      'invMatrix',
+      'mat4',
+      'edge',
+      '1f'
+    )
+  }
+
+  prepareUniforms(...params: string[]) {
+    if (params.length % 2 != 0) {
+      console.log('prepareUniforms needs arguments to be in pairs.')
+      return this
+    }
+
+    let loc
+    for (let i = 0; i < params.length; i += 2) {
+      loc = this.gl.getUniformLocation(this.program, params[i])
+      if (loc != null) this.uniformList[params[i]] = { loc: loc, type: params[i + 1] }
+    }
+
+    return this
+  }
+
+  async loadTextures(...params: string[]) {
+    if (params.length % 2 != 0) {
+      console.log('prepareTextures needs arguments to be in pairs.')
+      return this
+    }
+
+    let loc: WebGLUniformLocation | null
+    let src: string
+    for (let i = 0; i < params.length; i += 2) {
+      loc = this.gl.getUniformLocation(this.program, params[i])
+      src = params[i + 1]
+
+      await glUtils(this.gl)
+        .loadTexture(src)
+        .then((res) => {
+          this.textureList.push({ loc: loc, tex: res })
+        })
+    }
+
+    return this
+  }
+
+  setUniforms(...params: (string | number | number[])[]) {
+    if (params.length % 2 != 0) {
+      console.log('setUniforms needs params to be in pairs.')
+      return this
+    }
+
+    let name, val: any
+
+    for (let i = 0; i < params.length; i += 2) {
+      name = params[i]
+      val = params[i + 1]
+
+      if (typeof name !== 'string') {
+        console.log('params shoud be orderring (name, value...).')
+        return this
+      }
+
+      if (this.uniformList[name] === undefined) {
+        console.log('uniform not found ' + name)
+        return this
+      }
+
+      switch (this.uniformList[name].type) {
+        case '1f':
+          this.gl.uniform1f(this.uniformList[name].loc, val)
+          break
+        case '1fv':
+          this.gl.uniform1fv(this.uniformList[name].loc, val)
+          break
+        case '2fv':
+          this.gl.uniform2fv(this.uniformList[name].loc, val)
+          break
+        case '3fv':
+          this.gl.uniform3fv(this.uniformList[name].loc, val)
+          break
+        case '4fv':
+          this.gl.uniform4fv(this.uniformList[name].loc, val)
+          break
+        case 'mat4':
+          this.gl.uniformMatrix4fv(this.uniformList[name].loc, false, val)
+          break
+        default:
+          console.log('unknown uniform type for ' + name)
+          break
+      }
+    }
+
+    return this
   }
 
   activate() {
@@ -37,186 +132,54 @@ export class Shader {
     this.gl.deleteProgram(this.program)
   }
 
-  setMmatrix(mat: number[]) {
-    this.gl.uniformMatrix4fv(this.uniLocation.mMatrix, false, mat)
-    return this
-  }
-
-  setVmatrix(mat: number[]) {
-    this.gl.uniformMatrix4fv(this.uniLocation.vMatrix, false, mat)
-    return this
-  }
-
-  setPmatrix(mat: number[]) {
-    this.gl.uniformMatrix4fv(this.uniLocation.pMatrix, false, mat)
-    return this
-  }
-
-  //...................................................
-  preRender() {}
-
-  renderModel(model: Model) {
-    //register uniform
-    this.setMmatrix(model.transform.getMatrix())
-
-    //draw
-    this.gl.bindVertexArray(model.vao)
-    this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
-    this.gl.bindVertexArray(null)
-
-    return this
-  }
-}
-
-export class ToonShader extends Shader {
-  invMatrix: WebGLUniformLocation | null
-  lightPosition: WebGLUniformLocation | null
-  eyePosition: WebGLUniformLocation | null
-  color: WebGLUniformLocation | null
-  sdwThreshold: WebGLUniformLocation | null
-  hiThreshold: WebGLUniformLocation | null
-  rimThreshold: WebGLUniformLocation | null
-  edge: WebGLUniformLocation | null
-  edgeWidth: WebGLUniformLocation | null
-  albedoTex: WebGLUniformLocation | null
-  normalTex: WebGLUniformLocation | null
-  texture: {
-    albedo: WebGLTexture | null
-    normal: WebGLTexture | null
-  }
-
-  constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
-    super(gl, vs, fs)
-    //custom uniforms
-    this.invMatrix = gl.getUniformLocation(this.program, 'invMatrix')
-    this.lightPosition = gl.getUniformLocation(this.program, 'lightPosition')
-    this.eyePosition = gl.getUniformLocation(this.program, 'eyePosition')
-    this.sdwThreshold = gl.getUniformLocation(this.program, 'sdwThreshold')
-    this.hiThreshold = gl.getUniformLocation(this.program, 'hiThreshold')
-    this.rimThreshold = gl.getUniformLocation(this.program, 'rimThreshold')
-    this.color = gl.getUniformLocation(this.program, 'color')
-    this.albedoTex = gl.getUniformLocation(this.program, 'albedoTex')
-    this.normalTex = gl.getUniformLocation(this.program, 'normalTex')
-    this.edge = gl.getUniformLocation(this.program, 'edge')
-    this.edgeWidth = gl.getUniformLocation(this.program, 'edgeWidth')
-
-    //store texture
-    this.texture = {
-      albedo: null,
-      normal: null,
-    }
-  }
-
-  setLightPosition(vec: number[]) {
-    this.gl.uniform3fv(this.lightPosition, vec)
-    return this
-  }
-
-  setEyePosition(vec: number[]) {
-    this.gl.uniform3fv(this.eyePosition, vec)
-    return this
-  }
-
-  setInvMatrix(mat: number[]) {
-    this.gl.uniformMatrix4fv(this.invMatrix, false, mat)
-    return this
-  }
-
-  setColor(vec: number[]) {
-    this.gl.uniform3fv(this.color, vec)
-    return this
-  }
-
-  setEdgeWidth(val: number) {
-    this.gl.uniform1f(this.edgeWidth, val)
-    return this
-  }
-
-  setSdwThreshold(val: number) {
-    this.gl.uniform1f(this.sdwThreshold, val)
-    return this
-  }
-
-  setHiThreshold(val: number) {
-    this.gl.uniform1f(this.hiThreshold, val)
-    return this
-  }
-
-  setRimThreshold(val: number) {
-    this.gl.uniform1f(this.rimThreshold, val)
-    return this
-  }
-
-  async loadAlbedoTexture(src: string) {
-    await glUtils(this.gl)
-      .loadTexture(src)
-      .then((res) => (this.texture.albedo = res))
-    return this
-  }
-
   //...................................................
   preRender() {
-    // bind texture
-    if (this.texture.albedo) {
-      this.gl.activeTexture(this.gl.TEXTURE0)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture.albedo)
-      this.gl.uniform1i(this.albedoTex, 0)
-    }
+    //set textures
+    this.gl.useProgram(this.program)
 
-    if (this.texture.normal) {
-      this.gl.activeTexture(this.gl.TEXTURE1)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture.normal)
-      this.gl.uniform1i(this.normalTex, 1)
+    if (this.textureList.length > 0) {
+      for (let i = 0; i < this.textureList.length; i++) {
+        const slot = this.gl.TEXTURE0 + i
+
+        this.gl.activeTexture(slot)
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textureList[i].tex)
+        this.gl.uniform1i(this.textureList[i].loc, i)
+      }
     }
 
     return this
   }
 
   renderModel(model: Model) {
-    // register matrix
-    this.setMmatrix(model.transform.getMatrix())
-    this.setInvMatrix(model.transform.getInvMatrix())
+    // set mMatrix x bone
+    this.setUniforms('mMatrix', model.transform.getMatrix(), 'invMatrix', model.transform.getInvMatrix())
+
+    if (model.armature && model.attribute.bon && model.attribute.wei) {
+      model.armature.orderedJoints.forEach((bone: any, index: number) => {
+        let bones = this.gl.getUniformLocation(this.program, `bones[${index}]`)
+        this.gl.uniformMatrix4fv(bones, false, bone.offsetMat)
+      })
+    }
 
     // bind and draw
     this.gl.bindVertexArray(model.vao)
 
     // model
     this.gl.cullFace(this.gl.BACK)
-    this.gl.uniform1i(this.edge, 0)
+    this.setUniforms('edge', 0)
     this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
 
     // edge
-    this.gl.cullFace(this.gl.FRONT)
-    this.gl.uniform1i(this.edge, 1)
-    this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
+    if (this.isEdge) {
+      this.gl.cullFace(this.gl.FRONT)
+      this.setUniforms('edge', 1)
+      this.gl.drawElements(this.gl.TRIANGLES, model.attribute.inx.length, this.gl.UNSIGNED_SHORT, 0)
+    }
 
-    // unbind
+    //unbind
     this.gl.bindVertexArray(null)
     this.gl.bindTexture(this.gl.TEXTURE_2D, null)
 
-    return this
-  }
-}
-
-export class SkinShader extends ToonShader {
-  boneIdx: WebGLUniformLocation | null
-  weights: WebGLUniformLocation | null
-
-  constructor(gl: WebGL2RenderingContext, vs: string, fs: string) {
-    super(gl, vs, fs)
-
-    //custom attribute
-    this.boneIdx = gl.getAttribLocation(this.program, 'boneIdx')
-    this.weights = gl.getAttribLocation(this.program, 'weights')
-  }
-
-  //...................................................
-  renderModel(model: Model) {
-    model.armature?.orderedJoints.forEach((bone, index) => {
-      let bones = this.gl.getUniformLocation(this.program, `bones[${index}]`)
-      this.gl.uniformMatrix4fv(bones, false, bone.offsetMat)
-    })
-    super.renderModel(model)
     return this
   }
 }

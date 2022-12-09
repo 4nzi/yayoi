@@ -4,8 +4,8 @@ precision mediump float;
 in vec3 vNormal;
 in vec2 vUv;
 
-uniform sampler2D albedoTex;
-uniform sampler2D normalTex;
+uniform sampler2D albedo;
+uniform sampler2D normal;
 uniform bool edge;
 uniform mat4 invMatrix;
 uniform vec3 lightPosition;
@@ -34,7 +34,7 @@ void main(void){
         float rim          = rimThreshold - clamp(dot(vNormal, eyePosition), 0.0, rimThreshold);
 
         // color
-        vec4  smpColor     = texture(albedoTex, vUv);
+        vec4  smpColor     = texture(albedo, vUv);
         vec4  sdwColor     = vec4(0.3, 0.3, 0.3, 1.0);
 
         outColor = smpColor * (1.0 - factor) + sdwColor * smpColor * factor + rim + (vec4(0.3, 0.3, 0.3, 1.0) * stepSpecular);

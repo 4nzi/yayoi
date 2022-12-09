@@ -184,3 +184,82 @@ export class CameraController {
     this.prevY = y
   }
 }
+
+export class LimitController {
+  canvas: HTMLCanvasElement
+  camera: Camera
+  rotateRate: number
+  panRate: number
+  zoomRate: number
+  offsetX: number
+  offsetY: number
+  initX: number
+  initY: number
+  prevX: number
+  prevY: number
+  onMoveHandler: (e: any) => void
+  onOutHandler: (e: any) => void
+
+  constructor(gl: any, camera: Camera) {
+    let oThis = this
+    let box = gl.canvas.getBoundingClientRect()
+
+    this.canvas = gl.canvas
+    this.camera = camera
+
+    this.rotateRate = -300
+    this.panRate = 5
+    this.zoomRate = 200
+
+    this.offsetX = box.left
+    this.offsetY = box.top
+
+    this.initX = 0
+    this.initY = 0
+    this.prevX = 0
+    this.prevY = 0
+
+    this.onMoveHandler = function (e: any) {
+      oThis.onMouseMove(e)
+    }
+
+    this.onOutHandler = function (e: any) {
+      oThis.onMouseOut(e)
+    }
+
+    this.canvas.addEventListener('mouseover', function (e: any) {
+      oThis.onMouseDown(e)
+    })
+  }
+
+  onMouseDown(e: any) {
+    this.initX = this.prevX = e.pageX - this.offsetX
+    this.initY = this.prevY = e.pageY - this.offsetY
+
+    this.canvas.addEventListener('mousemove', this.onMoveHandler)
+    this.canvas.addEventListener('mouseleave', this.onOutHandler)
+  }
+
+  onMouseMove(e: any) {
+    var x = e.pageX - this.offsetX,
+      y = e.pageY - this.offsetY,
+      dx = x - this.prevX,
+      dy = y - this.prevY
+    this.camera.transform.rotation[1] += (dx * (this.rotateRate / this.canvas.width)) / 16
+    this.camera.transform.rotation[0] += (dy * (this.rotateRate / this.canvas.height)) / 16
+    this.prevX = x
+    this.prevY = y
+  }
+
+  onMouseOut(e: any) {
+    var x = e.pageX - this.offsetX,
+      y = e.pageY - this.offsetY,
+      dx = x - this.prevX,
+      dy = y - this.prevY
+
+    this.camera.transform.rotation[1] = 0
+    this.camera.transform.rotation[0] = 0
+    this.prevX = x
+    this.prevY = y
+  }
+}
