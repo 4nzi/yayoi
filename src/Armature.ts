@@ -9,12 +9,16 @@ export default class Armature {
   orderedJoints: JOINT[]
   animations: ANIMATIONS | null
   isActive: boolean
+  isLoop: boolean
+  frame: { start: number; end: number; current: number }
 
   constructor() {
     this.joints = []
     this.orderedJoints = []
     this.animations = null
     this.isActive = false
+    this.isLoop = false
+    this.frame = { start: 0, end: 0, current: 0 }
   }
 
   loadGLTFSkins(skins: SKIN[]) {
@@ -135,25 +139,34 @@ export default class Armature {
     }
   }
 
-  playAnimations(frame: number) {
+  playAnimation() {
     if (this.animations == null || undefined) return console.log(' No animation set')
-
-    this.update()
+    if (this.frame.current == this.frame.end && !this.isLoop) return
 
     if (this.isActive) {
+      if (this.frame.current == this.frame.end) this.frame.current = this.frame.start
+
       for (let i in this.animations) {
-        this.setPose(i, this.animations[i].rotation.samples[frame].v)
+        this.setPose(i, this.animations[i].rotation.samples[this.frame.current].v)
       }
+
+      this.frame.current++
     }
+
+    this.update()
   }
 
-  play() {
+  play(start: number, end: number, isLoop: boolean) {
     this.isActive = true
+    this.isLoop = isLoop
+    this.frame = { start: start, end: end, current: start }
     return this
   }
 
   stop() {
     this.isActive = false
+    this.isLoop = false
+    this.frame = { start: 0, end: 0, current: 0 }
     return this
   }
 }
