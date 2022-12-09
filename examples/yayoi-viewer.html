@@ -23,11 +23,21 @@
         box-shadow: 0 0 8px 2px rgb(0 0 0 / 30%);
         z-index: 1;
       }
+      header .item {
+        padding: 0 1em;
+        font-size: 0.8rem;
+        text-decoration: none;
+      }
       h1 {
         font-family: 'M PLUS 1p', sans-serif;
         color: rgb(226, 223, 219);
         font-size: 1.4rem;
         font-weight: 100;
+      }
+      span {
+        margin-left: 1em;
+        margin: 0 0.2em;
+        opacity: 0.2;
       }
       canvas {
         vertical-align: top;
@@ -37,6 +47,8 @@
   <body>
     <header id="header">
       <h1>Yayoi Viewer</h1>
+      <span class="item">|</span>
+      <a href="https://github.com/4nzi/yayoi">yayoi.js</a>
     </header>
     <main>
       <canvas id="root"></canvas>
